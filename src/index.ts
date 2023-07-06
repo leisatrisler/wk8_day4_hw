@@ -1,31 +1,25 @@
-import { v4 as idGen } from 'uuid';
 import * as products from './items.json';
 import * as sqlite3 from 'sqlite3';
+import { v4 as uuidv4 } from 'uuid';
+import './style.css';
 const db = new sqlite3.Database(':memory:');
 
+
 class Product {
-  id: string; //changed # to a string.
+  id: string;
   name: string;
   price: number;
   description: string;
-  quantity: number;
 
    constructor(name: string, price: number, description: string) {
-    this.id = idGen();
+    this.id = uuidv4();
     this.name = name;
     this.price = price;
     this.description = description;
-    this.quantity = 0;
    }
   
   getId() : string {
     return this.id;
-  }
-  setQuantity(quantity: number): void {
-    this.quantity = quantity;
-  }
-  getQuantity(): number {
-    return this.quantity;
   }
 };
 
@@ -76,15 +70,8 @@ class Customer { //customer aka user
 
   removeQuantityFromCart(product: Product, quantity: number): void {
     const existingProduct = this.products.find((prod) => prod.getId() === product.getId());
-    if (existingProduct) {
-      existingProduct.setQuantity(existingProduct.getQuantity() - quantity);
-      if (existingProduct.getQuantity() <= 0) {
-        this.removeProduct(product);
-      }
     }
-  }
-};
-
+  };
 
 class Shop {
   private product: Product[];
@@ -105,7 +92,7 @@ class Shop {
 
 function createCustomer(name: string, age: number): Promise<Customer> {
   return new Promise((resolve, reject) => {
-    const id = idGen();
+    const id = uuidv4();
     db.run(
       'INSERT INTO Customers (id, name, age) VALUES (?, ?, ?)',
       [id, name, age],
@@ -126,16 +113,9 @@ function createProduct(id: string, name: string, price: number, description: str
     name,
     price,
     description,
-    quantity: 0,
     getId() {
       return this.id;
     },
-    setQuantity(quantity: number) {
-      this.quantity = quantity;
-    },
-    getQuantity() {
-      return this.quantity;
-    }
   };
 }
 
@@ -148,14 +128,8 @@ function removeFromCart(product: Product, customer: Customer): void {
 }
 
 function removeQuantityFromCart(product: Product, customer: Customer, quantity: number): void {
-  const existingProduct = customer.products.find((cartProduct) => cartProduct.id === product.id);
-  if (existingProduct) {
-    existingProduct.quantity -= quantity;
-    if (existingProduct.quantity <= 0) {
-      removeFromCart(product, customer);
-    }
+  const existingProduct = customer.products.find((cartProduct) => cartProduct.id === product.
   }
-}
 
 function calculateCartTotal(customer: Customer): number {
   return customer.products.reduce((total, product) => total + product.price, 0);
@@ -228,7 +202,6 @@ db.serialize(() => {
           console.log(`Showing Products from the database:`);
           console.log(rows);
 
-          // Delete the customer aka user
           db.run('DELETE FROM Customers WHERE id = ?', [customer.id], function (err) {
             if (err) {
               console.error('Error while deleting the customer:', err);
@@ -236,8 +209,7 @@ db.serialize(() => {
               console.log('The customer was deleted successfully.');
             }
           });
-
-          // Delete the products from customer aka user
+          
           db.run('DELETE FROM Products', function (err) {
             if (err) {
               console.error('Error while deleting the products:', err);
